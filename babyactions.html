@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Development Matching Activity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --orange: #F57C00;
+            --purple: #6A1B9A;
+            --white: #FFFFFF;
+            --green: #4CAF50;
+            --red: #f44336;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--white);
+            min-height: 100vh;
+            padding: 10px;
+            position: relative;
+        }
+
+        .logo {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 100px;
+            height: auto;
+            z-index: 1000;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            min-height: calc(100vh - 20px);
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .game-title {
+            font-size: 1.6em;
+            color: var(--purple);
+            margin-bottom: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-instructions {
+            font-size: 0.9em;
+            color: var(--orange);
+            margin-bottom: 3px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+
+        .score-item {
+            background: var(--purple);
+            color: var(--white);
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(106, 27, 154, 0.3);
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .words-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            flex: 0 0 180px;
+            border: 3px solid var(--purple);
+        }
+
+        .descriptions-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 6px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            border: 3px solid var(--purple);
+            min-height: 300px;
+        }
+
+        .words-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 8px;
+            height: 100%;
+            width: 100%;
+        }
+
+        .word-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--purple);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.75em;
+            font-weight: bold;
+            padding: 4px;
+            border: 2px solid var(--orange);
+        }
+
+        .word-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .word-number {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 24px;
+            height: 24px;
+            background: var(--orange);
+            border: 2px solid var(--purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 20;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .word-item.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--orange);
+            border: 3px solid var(--orange);
+            z-index: 10;
+            position: relative;
+        }
+
+        .word-item.selected::before {
+            content: '👆 SELECTED';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--orange);
+            color: var(--white);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        .word-item.matched::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            color: var(--green);
+            background: rgba(255, 255, 255, 0.9);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .descriptions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 8px;
+            height: 100%;
+        }
+
+        .description-item {
+            background: var(--orange);
+            color: var(--white);
+            padding: 12px 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(245, 124, 0, 0.3);
+            user-select: none;
+            border: 2px solid var(--purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.3;
+        }
+
+        .description-item:hover {
+            background: #E65100;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 124, 0, 0.4);
+        }
+
+        .word-item.matched {
+            opacity: 0.5;
+            transform: scale(0.95);
+            pointer-events: none;
+        }
+
+        .description-item.selected {
+            background: var(--purple);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--purple);
+            border: 2px solid var(--white);
+            position: relative;
+            z-index: 10;
+        }
+
+        .description-item.selected::before {
+            content: '👆 SELECTED';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--purple);
+            color: var(--white);
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            white-space: nowrap;
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-8px);
+            }
+            60% {
+                transform: translateX(-50%) translateY(-4px);
+            }
+        }
+
+        .description-item.matched {
+            background: var(--green);
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed var(--purple);
+            flex-shrink: 0;
+        }
+
+        .game-button {
+            background: linear-gradient(45deg, var(--orange), var(--purple));
+            color: var(--white);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .show-answers {
+            background: linear-gradient(45deg, var(--purple), #9C27B0);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, var(--orange), var(--purple));
+            color: var(--white);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                min-height: 100vh;
+                height: auto;
+            }
+            
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .words-section {
+                order: 1;
+                min-height: 180px;
+                flex: 0 0 auto;
+            }
+            
+            .descriptions-section {
+                flex: 1;
+                order: 2;
+                min-height: 300px;
+            }
+            
+            .score-board {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .words-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                height: 380px;
+            }
+            
+            .word-item {
+                height: 60px;
+                min-height: 60px;
+                font-size: 0.7em;
+                padding: 3px;
+            }
+            
+            .word-number {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+                top: 6px;
+                left: 6px;
+            }
+            
+            .descriptions-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+                gap: 6px;
+                height: 100%;
+            }
+            
+            .description-item {
+                font-size: 0.7em;
+                padding: 4px 4px;
+            }
+
+            .buttons-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .game-button {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img src="1ohfive.png" alt="Logo" class="logo">
+    
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">👶 Baby Development Matching Activity 👶</h1>
+            <p class="game-instructions">Match the baby actions with their descriptions! Click a word, then click its description!</p>
+        </div>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <span>Matches: </span>
+                <span id="matches">0</span>
+                <span>/12</span>
+            </div>
+            <div class="score-item">
+                <span>Attempts: </span>
+                <span id="attempts">0</span>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="words-section">
+                <div class="words-grid" id="wordsGrid"></div>
+            </div>
+            
+            <div class="descriptions-section">
+                <div class="descriptions-grid" id="descriptionsGrid"></div>
+            </div>
+        </div>
+        
+        <div class="buttons-container">
+            <button class="game-button show-answers" id="showAnswersBtn" onclick="toggleAnswers()">👀 Show Answers</button>
+            <button class="game-button" onclick="resetGame()">🔄 Reset Activity</button>
+        </div>
+    </div>
+    
+    <div class="celebration" id="celebration">
+        🎉 Excellent Work! 🎉<br>
+        You matched all the baby actions!<br>
+        <small>Great job learning about baby development!</small>
+    </div>
+
+    <script>
+        const babyData = [
+            { file: 'grasp.jpg', word: 'to grasp', description: 'To hold something tightly with the hand' },
+            { file: 'giggle.jpg', word: 'to giggle', description: 'To laugh lightly in a silly way' },
+            { file: 'babble.jpg', word: 'to babble', description: 'To make sounds that don\'t form real words' },
+            { file: 'breastfeed.jpg', word: 'to breastfeed', description: 'To feed a baby with milk from the mother\'s breast' },
+            { file: 'teethe.jpg', word: 'to teethe', description: 'To grow new teeth (often painful for baby)' },
+            { file: 'crawl.jpg', word: 'to crawl', description: 'To move on hands and knees before walking' },
+            { file: 'cuddle.jpg', word: 'to cuddle', description: 'To hold close for warmth or comfort' },
+            { file: 'situp.jpg', word: 'to sit up', description: 'To move from lying down to sitting position' },
+            { file: 'toddle.jpg', word: 'to toddle', description: 'To walk with unsteady steps as a young child' },
+            { file: 'sleep.jpg', word: 'to sleep', description: 'To rest with eyes closed and reduced consciousness' },
+            { file: 'rollover.jpg', word: 'to roll over', description: 'To turn from back to front or vice versa' },
+            { file: 'smile.jpg', word: 'to smile', description: 'To form a pleased, kind, or amused facial expression' }
+        ];
+
+        let selectedWord = null;
+        let selectedDescription = null;
+        let matches = 0;
+        let attempts = 0;
+        let matchedPairs = new Set();
+        let showingAnswers = false;
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function initializeGame() {
+            const wordsGrid = document.getElementById('wordsGrid');
+            const descriptionsGrid = document.getElementById('descriptionsGrid');
+            
+            // Clear existing content
+            wordsGrid.innerHTML = '';
+            descriptionsGrid.innerHTML = '';
+            
+            // Create a fixed order for words (not shuffled) to maintain consistent numbering
+            const orderedBabies = [...babyData];
+            const shuffledDescriptions = shuffleArray(babyData.map(item => item.description));
+            
+            // Create word elements with sequential numbering
+            orderedBabies.forEach((item, index) => {
+                const wordDiv = document.createElement('div');
+                wordDiv.className = 'word-item';
+                wordDiv.dataset.word = item.word;
+                wordDiv.dataset.description = item.description;
+                wordDiv.dataset.index = index;
+                
+                // Create the number circle
+                const numberCircle = document.createElement('div');
+                numberCircle.className = 'word-number';
+                numberCircle.textContent = index + 1;
+                
+                const wordText = document.createElement('div');
+                wordText.textContent = item.word;
+                wordText.style.position = 'relative';
+                wordText.style.zIndex = '1';
+                
+                wordDiv.appendChild(wordText);
+                wordDiv.appendChild(numberCircle);
+                wordDiv.addEventListener('click', () => selectWord(wordDiv));
+                wordsGrid.appendChild(wordDiv);
+            });
+            
+            // Create description elements
+            shuffledDescriptions.forEach((description, index) => {
+                const descDiv = document.createElement('div');
+                descDiv.className = 'description-item';
+                descDiv.textContent = description;
+                descDiv.dataset.description = description;
+                descDiv.dataset.index = index;
+                descDiv.addEventListener('click', () => selectDescription(descDiv));
+                descriptionsGrid.appendChild(descDiv);
+            });
+        }
+
+        function clearSelections() {
+            document.querySelectorAll('.word-item').forEach(el => el.classList.remove('selected'));
+            document.querySelectorAll('.description-item').forEach(el => el.classList.remove('selected'));
+            selectedWord = null;
+            selectedDescription = null;
+        }
+
+        function selectWord(wordElement) {
+            if (wordElement.classList.contains('matched')) return;
+            
+            // If a description is already selected, try to match
+            if (selectedDescription) {
+                checkMatch(wordElement, selectedDescription);
+                return;
+            }
+            
+            // Clear previous selections
+            clearSelections();
+            
+            selectedWord = wordElement;
+            wordElement.classList.add('selected');
+            
+            // Add a little pulse effect
+            wordElement.style.animation = 'none';
+            setTimeout(() => {
+                wordElement.style.animation = '';
+            }, 10);
+        }
+
+        function selectDescription(descElement) {
+            if (descElement.classList.contains('matched')) return;
+            
+            // If a word is already selected, try to match
+            if (selectedWord) {
+                checkMatch(selectedWord, descElement);
+                return;
+            }
+            
+            // Clear previous selections
+            clearSelections();
+            
+            selectedDescription = descElement;
+            descElement.classList.add('selected');
+            
+            // Add a little pulse effect
+            descElement.style.animation = 'none';
+            setTimeout(() => {
+                descElement.style.animation = '';
+            }, 10);
+        }
+
+        function checkMatch(wordElement, descElement) {
+            attempts++;
+            document.getElementById('attempts').textContent = attempts;
+            
+            const wordDescription = wordElement.dataset.description;
+            const selectedDescription = descElement.dataset.description;
+            
+            if (wordDescription === selectedDescription) {
+                // Correct match
+                wordElement.classList.add('matched');
+                descElement.classList.add('matched');
+                matches++;
+                document.getElementById('matches').textContent = matches;
+                
+                // Add to matched pairs
+                matchedPairs.add(wordElement.dataset.word);
+                
+                // Check if activity is complete
+                if (matches === babyData.length) {
+                    setTimeout(() => {
+                        document.getElementById('celebration').style.display = 'block';
+                        setTimeout(() => {
+                            document.getElementById('celebration').style.display = 'none';
+                        }, 3000);
+                    }, 500);
+                }
+            } else {
+                // Wrong match - show feedback
+                wordElement.style.border = '3px solid #f44336';
+                descElement.style.border = '3px solid #f44336';
+                
+                setTimeout(() => {
+                    wordElement.style.border = '';
+                    descElement.style.border = '';
+                }, 1000);
+            }
+            
+            // Clear selections
+            clearSelections();
+        }
+
+        function resetGame() {
+            // Show loading state
+            const resetBtn = document.querySelector('.game-button:not(.show-answers)');
+            const originalText = resetBtn.innerHTML;
+            resetBtn.innerHTML = '🔄 Resetting...';
+            resetBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Reset activity state
+                selectedWord = null;
+                selectedDescription = null;
+                matches = 0;
+                attempts = 0;
+                matchedPairs.clear();
+                showingAnswers = false;
+                
+                // Update display
+                document.getElementById('matches').textContent = '0';
+                document.getElementById('attempts').textContent = '0';
+                document.getElementById('celebration').style.display = 'none';
+                document.getElementById('showAnswersBtn').textContent = '👀 Show Answers';
+                
+                // Remove any answer highlights
+                document.querySelectorAll('.word-item').forEach(el => {
+                    el.style.boxShadow = '';
+                });
+                document.querySelectorAll('.description-item').forEach(el => {
+                    el.style.boxShadow = '';
+                });
+                
+                // Reinitialize activity
+                initializeGame();
+                
+                // Restore button
+                resetBtn.innerHTML = originalText;
+                resetBtn.disabled = false;
+                
+                // Add a little celebration for reset
+                resetBtn.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    resetBtn.style.transform = '';
+                }, 200);
+            }, 300);
+        }
+
+        function toggleAnswers() {
+            showingAnswers = !showingAnswers;
+            const btn = document.getElementById('showAnswersBtn');
+            
+            if (showingAnswers) {
+                btn.textContent = '🙈 Hide Answers';
+                // Show all correct matches
+                babyData.forEach(item => {
+                    const wordElements = document.querySelectorAll(`.word-item[data-word="${item.word}"]`);
+                    const descElements = document.querySelectorAll(`.description-item[data-description="${item.description}"]`);
+                    
+                    wordElements.forEach(el => {
+                        el.style.boxShadow = '0 0 10px 3px #4CAF50';
+                    });
+                    
+                    descElements.forEach(el => {
+                        el.style.boxShadow = '0 0 10px 3px #4CAF50';
+                    });
+                });
+            } else {
+                btn.textContent = '👀 Show Answers';
+                // Remove all answer highlights
+                document.querySelectorAll('.word-item').forEach(el => {
+                    el.style.boxShadow = '';
+                });
+                document.querySelectorAll('.description-item').forEach(el => {
+                    el.style.boxShadow = '';
+                });
+            }
+        }
+
+        // Initialize the activity when page loads
+        window.addEventListener('load', initializeGame);
+    </script>
+</body>
+</html>
